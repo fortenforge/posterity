@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
@@ -30,16 +31,15 @@ import com.yqritc.recyclerviewflexibledivider.HorizontalDividerItemDecoration;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final int MEDIA_TYPE_IMAGE = 1;
+    private static final int MEDIA_TYPE_IMAGE = 1;
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
-    private final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
-    private RecyclerView recyclerView;
+    private MainRecyclerAdapter mainRecyclerAdapter;
 
     private PosterHelper posterHelper;
 
@@ -60,9 +60,9 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setTitle("Posterity");
         }
 
-        recyclerView = (RecyclerView) findViewById(R.id.recycler);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(this).showLastDivider().build());
+        recyclerView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(this).margin(-1000, -1000).showLastDivider().build()); //hack
         recyclerView.setPadding(0, 0, 0, 0);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -79,11 +79,28 @@ public class MainActivity extends AppCompatActivity {
         });
 
         posterHelper = new PosterHelper(getApplicationContext());
-        List<List<String>> posterData = posterHelper.queryAll();
-        numEvents = posterData.size();
+        numEvents = posterHelper.queryAll().size();
 
-        MainRecyclerAdapter mainRecyclerAdapter = new MainRecyclerAdapter(posterData);
+        mainRecyclerAdapter = new MainRecyclerAdapter(posterHelper);
         recyclerView.setAdapter(mainRecyclerAdapter);
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                        return true;
+                    }
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+                        int position = viewHolder.getAdapterPosition();
+                        String imageName = posterHelper.queryAll().get(position).getImageName();
+                        posterHelper.deleteRow(imageName);
+                        numEvents -= 1;
+                        mainRecyclerAdapter.removeItem(position);
+                    }
+                }
+        );
+        itemTouchHelper.attachToRecyclerView(recyclerView);
 
         Log.d("Posterity", "onCreate finished");
     }
@@ -112,9 +129,10 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 numEvents += 1;
-                posterHelper.insertRow(newImageName, "Cool Title " + numEvents, "Cool Date " + numEvents, "Cool Time " + numEvents, "Cool Loc " + numEvents);
-                MainRecyclerAdapter mainRecyclerAdapter = new MainRecyclerAdapter(posterHelper.queryAll());
-                recyclerView.setAdapter(mainRecyclerAdapter);
+                posterHelper.insertRow(newImageName, "Cool and Pretty Long Title " + numEvents, 11, 30, 13, 30, 2015, 8, 3, "Cool Loc " + numEvents);
+                Intent intent = new Intent(this, PosterActivity.class);
+                intent.putExtra("eventnum", numEvents - 1);
+                startActivity(intent);
             }
             else if (resultCode == Activity.RESULT_CANCELED) {
                 Log.d("Posterity", "image capture canceled");

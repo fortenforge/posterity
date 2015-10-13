@@ -1,13 +1,18 @@
 package posterity.com.posterity;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,27 +28,41 @@ public class PosterActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         PosterHelper posterHelper = new PosterHelper(getApplicationContext());
-        List<List<String>> posterData = posterHelper.queryAll();
-        int eventNum = getIntent().getIntExtra("eventnum", 0);
+        List<PosterEvent> posterData = posterHelper.queryAll();
+        final int eventNum = getIntent().getIntExtra("eventnum", 0);
         if (!posterData.isEmpty()) {
-            List<String> posterRow = posterData.get(eventNum);
-            File imageFile = new File(posterRow.get(0));
+            PosterEvent posterEvent = posterData.get(eventNum);
+            File imageFile = new File(posterEvent.getImageName());
             if (imageFile.exists()) {
                 ImageView imageView = (ImageView) findViewById(R.id.poster);
                 Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
                 imageView.setImageBitmap(bitmap);
             }
             CollapsingToolbarLayout collapsingToolbar = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
-            collapsingToolbar.setTitle(posterRow.get(1));
+            collapsingToolbar.setTitle(posterEvent.getEventTitle());
             TextView eventTime = (TextView) findViewById(R.id.time_text);
-            eventTime.setText(posterRow.get(3));
+            eventTime.setText(posterEvent.getTimeRangeString());
             TextView eventDate = (TextView) findViewById(R.id.date_text);
-            eventDate.setText(posterRow.get(2));
+            eventDate.setText(posterEvent.getDateString());
             TextView eventLoc = (TextView) findViewById(R.id.location_text);
-            eventLoc.setText(posterRow.get(4));
+            eventLoc.setText(posterEvent.getLocation());
+
+            FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Context context = v.getContext();
+                    Intent intent = new Intent(context, PosterEditActivity.class);
+                    intent.putExtra("eventnum", eventNum);
+                    context.startActivity(intent);
+                }
+            });
         }
     }
 

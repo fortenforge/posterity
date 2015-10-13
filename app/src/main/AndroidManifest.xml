@@ -3,6 +3,7 @@
     package="posterity.com.posterity" >
 
     <uses-feature android:name="android.hardware.camera" />
+
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
@@ -22,8 +23,17 @@
         </activity>
         <activity
             android:name=".PosterActivity"
-            android:parentActivityName=".MainActivity"
-            android:label="@string/title_activity_poster" >
+            android:label="@string/title_activity_poster"
+            android:parentActivityName=".MainActivity" >
+        </activity>
+        <activity
+            android:name=".PosterEditActivity"
+            android:label="@string/title_activity_poster_edit"
+            android:parentActivityName=".PosterActivity"
+            android:theme="@style/AppTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="posterity.com.posterity.PosterActivity" />
         </activity>
     </application>
 

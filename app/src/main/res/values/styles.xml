@@ -12,4 +12,9 @@
     <color name="primary_dark">#455A64</color>
     <color name="accent">#0091EA</color>
 
+    <color name="translucent_scrim_top">#33000000</color>
+    <color name="translucent_scrim_top_center">#26000000</color>
+    <color name="translucent_scrim_bottom">#4D000000</color>
+    <color name="translucent_scrim_bottom_center">#33000000</color>
+
 </resources>
